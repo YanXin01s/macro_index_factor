@@ -1,0 +1,106 @@
+exclude: ^(docs/logos|pymc/tests/data)/
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.4.0
+  hooks:
+    -   id: check-merge-conflict
+    -   id: check-toml
+    -   id: check-yaml
+    -   id: debug-statements
+    -   id: end-of-file-fixer
+    -   id: no-commit-to-branch
+        args: [--branch, master]
+    -   id: requirements-txt-fixer
+        exclude: ^requirements-dev\.txt$
+    -   id: trailing-whitespace
+- repo: https://github.com/PyCQA/isort
+  rev: 5.10.1
+  hooks:
+    - id: isort
+      name: isort
+- repo: https://github.com/asottile/pyupgrade
+  rev: v3.3.1
+  hooks:
+    - id: pyupgrade
+      args: [--py37-plus]
+- repo: https://github.com/psf/black
+  rev: 22.12.0
+  hooks:
+    - id: black
+    - id: black-jupyter
+- repo: https://github.com/PyCQA/pylint
+  rev: v2.15.8
+  hooks:
+    - id: pylint
+      args: [--rcfile=.pylintrc]
+      files: ^pymc/
+      exclude: (?x)(pymc/_version.py)
+- repo: https://github.com/PyCQA/pydocstyle
+  rev: 6.1.1
+  hooks:
+    - id: pydocstyle
+      args:
+      - --ignore=D100,D101,D102,D103,D104,D105,D107,D200,D202,D203,D204,D205,D209,D212,D213,D301,D400,D401,D403,D413,D415,D417
+      files: ^pymc/
+      exclude: ^pymc/tests/
+- repo: https://github.com/MarcoGorelli/madforhooks
+  rev: 0.3.0
+  hooks:
+    - id: no-print-statements
+      files: ^pymc/
+      exclude: (?x)(pymc/_version.py)
+- repo: local
+  hooks:
+    - id: check-no-tests-are-ignored
+      additional_dependencies: [pandas,pyyaml]
+      entry: python scripts/check_all_tests_are_covered.py
+      files: ^\.github/workflows/pytest\.yml$
+      language: python
+      name: Check no tests are ignored
+      pass_filenames: false
+    - id: pip-from-conda
+      additional_dependencies: [pyyaml]
+      entry: python scripts/generate_pip_deps_from_conda.py
+      files: ^conda-envs/environment-dev.yml$
+      language: python
+      name: Generate pip dependency from conda
+    - id: no-relative-imports
+      name: No relative imports
+      entry: from \.[\.\w]* import
+      types: [python]
+      language: pygrep
+      exclude: (?x)(pymc/_version.py|versioneer.py)
+    - id: no-internal-links
+      name: Check no links that should be cross-references are in the docs
+      description: >-
+        'A quick check for the links in the intersphinx '
+        'mapping inside `docs/source/`'
+        'See docs/source/conf.py for more information.'
+      files: ^docs/source/
+      # Files that should be ignored:
+      # - index.md
+      # - 404.md
+      # - contributing/release_checklist.md
+      # The other files are under development and should be
+      # removed from the list once they are revised.
+      exclude: >
+          (?x)(index.md|
+               404.md|
+               contributing/release_checklist.md|
+               contributing/versioning_schemes_explanation.md|
+               learn/examples.md)
+      entry: >
+          (?x)(arviz-devs.github.io|
+               python.arviz.org|
+               pytensor.readthedocs.io|
+               pymc-experimental.readthedocs.io|
+               docs.pymc.io|
+               www.pymc.io|
+               numpy.org/doc|
+               pymc-examples.readthedocs.io|
+               myst-parser.readthedocs.io|
+               myst-nb.readthedocs.io|
+               docs.python.org|
+               xarray.pydata.org)
+      language: pygrep
+      types_or: [markdown, rst, jupyter]
